@@ -1,5 +1,5 @@
 require('dotenv').config()
-const catalogRouter = require("/routes/catalog")
+const catalogRouter = require('./routes/catalog');
 const compression = require("compression");
 const helmet = require("helmet");
 const createError = require('http-errors');
@@ -12,7 +12,6 @@ const usersRouter = require('./routes/users');
 const userCoolRouter = require('./routes/cool')
 //Import routes for "catalog" area of site
 const app = express();
-app.use(compression());
 const mongoose = require("mongoose")
 mongoose.set("strictQuery",false)
 const dev_db_url = process.env.DATABASE_LINK;
@@ -22,6 +21,14 @@ main().catch((err) => console.log(err));
 async function main() {
   await mongoose.connect(mongoDB);
 }
+const RateLimit = require("express-rate-limit");
+const limiter = RateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 200,
+});
+// Apply rate limiter to all requests
+app.use(limiter);
+app.use(compression());
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
@@ -29,21 +36,9 @@ app.use(
     },
   }),
 );
-main().catch((err) => console.log(err));
-async function main() {
-  await mongoose.connect(mongoDB);
-}
-const RateLimit = require("express-rate-limit");
-const limiter = RateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 20,
-});
-// Apply rate limiter to all requests
-app.use(limiter);
 // view engine setup
 app.use(express.static(path.join(__dirname, "public")));
 app.set("view engine", "pug");
-
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
